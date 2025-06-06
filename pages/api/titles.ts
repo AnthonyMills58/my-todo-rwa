@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import sql from 'mssql';
 
 // Config for Azure SQL connection
-const config: sql.config = {
+export const config: sql.config = {
   user: 'sqladmin',
   password: 'Gizmund2011!!!',
   server: 'mytitleserver12345.database.windows.net',

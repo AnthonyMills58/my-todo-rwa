@@ -1,13 +1,23 @@
+// components/ToDoList.tsx
+
 import { useState, useEffect } from "react";
 
 interface Task {
-  id: number;
-  title: string;        // Title from DB
-  imageUrl: string;     // Cover image from DB
-  barcode: string;      // Barcode number from DB
-  coordinate: string;   // Coordinate from DB
-  copies: number;       // Copies (from DB, not random)
+  text: string;
+  imageUrl: string;
+  barcode: string;
+  coordinate: string;
+  copies: number;
   done: boolean;
+}
+
+interface TitleFromApi {
+  title: string;
+  imageUrl: string;
+  barcode: string;
+  coordinate: string;
+  copies: number;
+  status: number;
 }
 
 export default function ToDoList() {
@@ -15,40 +25,48 @@ export default function ToDoList() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch("/api/titles");
-        const data = await response.json();
+    async function fetchTitles() {
+      const res = await fetch('/api/titles');
+      const data = await res.json();
 
-        // Sort by coordinate (whole string)
-        data.sort((a: Task, b: Task) =>
-          a.coordinate.localeCompare(b.coordinate)
-        );
+      const mappedTasks = data.map((t: TitleFromApi) => ({
+        text: t.title,
+        imageUrl: t.imageUrl,
+        barcode: t.barcode,
+        coordinate: t.coordinate,
+        copies: t.copies,
+        done: t.status === 1,
+      }));
 
-        // Add done = false property to each task
-        const tasksWithDone = data.map((t: Task) => ({
-          ...t,
-          done: false,
-        }));
 
-        setTasks(tasksWithDone);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-      }
-    };
+      mappedTasks.sort((a: Task, b: Task) => a.coordinate.localeCompare(b.coordinate));
+      setTasks(mappedTasks);
+    }
 
-    fetchTasks();
+    fetchTitles();
   }, []);
 
-  const toggleDone = (index: number) => {
+  const toggleDone = async (index: number) => {
     const newTasks = [...tasks];
     newTasks[index].done = !newTasks[index].done;
     setTasks(newTasks);
+
+    try {
+      await fetch('/api/updateStatus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          barcode: newTasks[index].barcode,
+          status: newTasks[index].done ? 1 : 0,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
   };
 
   const handleItemClick = (task: Task) => {
-    if (selectedTask?.id === task.id) {
-      // Close if clicking same again
+    if (selectedTask?.text === task.text) {
       setSelectedTask(null);
     } else {
       setSelectedTask(task);
@@ -57,7 +75,6 @@ export default function ToDoList() {
 
   return (
     <div className="max-w-sm mx-auto p-2 relative">
-      {/* Full screen overlay → Cover + Details */}
       {selectedTask && (
         <div
           className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50 p-4 text-white"
@@ -65,11 +82,11 @@ export default function ToDoList() {
         >
           <img
             src={selectedTask.imageUrl}
-            alt={selectedTask.title}
+            alt={selectedTask.text}
             className="max-w-xs max-h-[50vh] object-contain mb-4"
           />
           <div className="text-center space-y-2 text-base">
-            <div className="font-bold text-lg">{selectedTask.title}</div>
+            <div className="font-bold text-lg">{selectedTask.text}</div>
             <div>Barcode: {selectedTask.barcode}</div>
             <div>Coordinate: {selectedTask.coordinate}</div>
             <div>Copies: {selectedTask.copies}</div>
@@ -86,12 +103,11 @@ export default function ToDoList() {
       <ul className="space-y-1">
         {tasks.map((t, index) => (
           <li
-            key={t.id}
+            key={index}
             className={`flex flex-row p-2 border rounded-lg shadow-sm ${
               t.done ? "bg-green-100 line-through text-gray-500" : "bg-white"
             } cursor-pointer`}
             onClick={(e) => {
-              // Prevent click on button from triggering full screen
               if ((e.target as HTMLElement).tagName !== "BUTTON") {
                 handleItemClick(t);
               }
@@ -99,21 +115,18 @@ export default function ToDoList() {
           >
             <img
               src={t.imageUrl}
-              alt={t.title}
+              alt={t.text}
               className="w-12 h-18 object-cover rounded mr-2 flex-shrink-0"
             />
             <div className="flex flex-col justify-between flex-grow space-y-1">
-              {/* Row 1 → Title */}
               <div>
                 <span className="text-base font-semibold break-words">
-                  {t.title}
+                  {t.text}
                 </span>
               </div>
-              {/* Row 2 → Barcode */}
               <div className="text-xs text-gray-600">
                 Barcode: {t.barcode}
               </div>
-              {/* Row 3 → Coordinate + Copies + Button */}
               <div className="flex items-center justify-between text-xs text-gray-600">
                 <div>
                   Coordinate: {t.coordinate} | Copies: {t.copies}
@@ -136,6 +149,7 @@ export default function ToDoList() {
     </div>
   );
 }
+
 
 
 
