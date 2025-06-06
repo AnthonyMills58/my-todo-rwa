@@ -1,48 +1,42 @@
-// components/ToDoList.tsx → Fullscreen image on tap → return on second tap
+// components/ToDoList.tsx → using your corrected book list → compact layout with button in line 2
 
 import { useState, useEffect } from "react";
 
 interface Task {
   text: string;        // Book title
   imageUrl: string;    // Book cover image
+  copies: number;      // Random copies 1-10
   done: boolean;
 }
 
-const allBooks: Task[] = [
+const allBooks = [
   {
     text: "Harry Potter and the Sorcerer's Stone",
     imageUrl: "https://covers.openlibrary.org/b/id/7984916-L.jpg",
-    done: false,
   },
   {
-    text: "1984",
-    imageUrl: "https://covers.openlibrary.org/b/id/7222246-L.jpg",
-    done: false,
+    text: "Los gemelos",
+    imageUrl: "https://covers.openlibrary.org/b/id/7984917-L.jpg",
   },
   {
-    text: "The Great Gatsby",
-    imageUrl: "https://covers.openlibrary.org/b/id/7222161-L.jpg",
-    done: false,
+    text: "Marice tiene novio",
+    imageUrl: "https://covers.openlibrary.org/b/id/7984919-L.jpg",
   },
   {
-    text: "Pride and Prejudice",
-    imageUrl: "https://covers.openlibrary.org/b/id/8231856-L.jpg",
-    done: false,
+    text: "The Great Johnstown Flood",
+    imageUrl: "https://covers.openlibrary.org/b/id/7984905-L.jpg",
   },
   {
-    text: "The Catcher in the Rye",
-    imageUrl: "https://covers.openlibrary.org/b/id/8226191-L.jpg",
-    done: false,
+    text: "Ogros y Gigantes",
+    imageUrl: "https://covers.openlibrary.org/b/id/7984904-L.jpg",
   },
   {
-    text: "Jane Eyre",
-    imageUrl: "https://covers.openlibrary.org/b/id/8225265-L.jpg",
-    done: false,
+    text: "The Versicht",
+    imageUrl: "https://covers.openlibrary.org/b/id/7984975-L.jpg",
   },
   {
-    text: "Crime and Punishment",
-    imageUrl: "https://covers.openlibrary.org/b/id/8319251-L.jpg",
-    done: false,
+    text: "Exclusive Magical Secrets",
+    imageUrl: "https://covers.openlibrary.org/b/id/7984949-L.jpg",
   },
 ];
 
@@ -52,7 +46,12 @@ export default function ToDoList() {
 
   useEffect(() => {
     const shuffled = [...allBooks].sort(() => 0.5 - Math.random());
-    setTasks(shuffled.slice(0, 7));
+    const selected = shuffled.slice(0, 7).map((book) => ({
+      ...book,
+      copies: Math.floor(Math.random() * 10) + 1, // Random 1-10
+      done: false,
+    }));
+    setTasks(selected);
   }, []);
 
   const toggleDone = (index: number) => {
@@ -63,10 +62,8 @@ export default function ToDoList() {
 
   const handleImageClick = (imageUrl: string) => {
     if (selectedImage === imageUrl) {
-      // Second tap → close full screen
       setSelectedImage(null);
     } else {
-      // First tap → open full screen
       setSelectedImage(imageUrl);
     }
   };
@@ -105,16 +102,19 @@ export default function ToDoList() {
               className="w-12 h-18 object-cover rounded mr-2 flex-shrink-0 cursor-pointer"
               onClick={() => handleImageClick(t.imageUrl)}
             />
-            <div className="flex flex-col justify-between flex-grow">
+            <div className="flex flex-col justify-between flex-grow space-y-1">
               <div>
                 <span className="text-base font-semibold break-words">
                   {t.text}
                 </span>
               </div>
-              <div className="mt-1">
+              <div className="flex items-center justify-between text-xs text-gray-600">
+                <div>
+                  Coordinate: A10:5 | Copies: {t.copies}
+                </div>
                 <button
                   onClick={() => toggleDone(index)}
-                  className={`w-full p-2 rounded text-xs font-bold transition-colors ${
+                  className={`ml-2 px-2 py-1 rounded text-xs font-bold transition-colors ${
                     t.done
                       ? "bg-yellow-400 hover:bg-yellow-500 text-white"
                       : "bg-green-500 hover:bg-green-600 text-white"
@@ -130,6 +130,8 @@ export default function ToDoList() {
     </div>
   );
 }
+
+
 
 
 
