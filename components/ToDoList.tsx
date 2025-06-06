@@ -1,4 +1,4 @@
-// components/ToDoList.tsx → tuned for 7 items → all visible → warehouse friendly
+// components/ToDoList.tsx → Fullscreen image on tap → return on second tap
 
 import { useState, useEffect } from "react";
 
@@ -48,9 +48,9 @@ const allBooks: Task[] = [
 
 export default function ToDoList() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Always pick 7 books in random order
     const shuffled = [...allBooks].sort(() => 0.5 - Math.random());
     setTasks(shuffled.slice(0, 7));
   }, []);
@@ -61,8 +61,32 @@ export default function ToDoList() {
     setTasks(newTasks);
   };
 
+  const handleImageClick = (imageUrl: string) => {
+    if (selectedImage === imageUrl) {
+      // Second tap → close full screen
+      setSelectedImage(null);
+    } else {
+      // First tap → open full screen
+      setSelectedImage(imageUrl);
+    }
+  };
+
   return (
-    <div className="max-w-sm mx-auto p-2">
+    <div className="max-w-sm mx-auto p-2 relative">
+      {/* Full screen image overlay */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+          onClick={() => setSelectedImage(null)}
+        >
+          <img
+            src={selectedImage}
+            alt="Full Cover"
+            className="max-w-full max-h-full object-contain"
+          />
+        </div>
+      )}
+
       <h1 className="text-xl font-bold mb-2 text-center text-blue-700">
         Picking Tasks
       </h1>
@@ -78,7 +102,8 @@ export default function ToDoList() {
             <img
               src={t.imageUrl}
               alt={t.text}
-              className="w-12 h-18 object-cover rounded mr-2 flex-shrink-0"
+              className="w-12 h-18 object-cover rounded mr-2 flex-shrink-0 cursor-pointer"
+              onClick={() => handleImageClick(t.imageUrl)}
             />
             <div className="flex flex-col justify-between flex-grow">
               <div>
@@ -105,6 +130,7 @@ export default function ToDoList() {
     </div>
   );
 }
+
 
 
 
